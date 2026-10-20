@@ -53,5 +53,5 @@ python_version = "3.12"
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["sklearn.*", "joblib", "sentence_transformers", "transformers"]
+module = ["sklearn.*", "joblib", "sentence_transformers", "transformers", "torch", "torch.*"]
 ignore_missing_imports = true
