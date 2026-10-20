@@ -2,8 +2,15 @@
 
 A plain PyTorch loop (no Trainer) so every choice is visible:
 
+* a linear head on the [CLS] vector, which is how the encoder was trained to
+  represent text (the stock sequence-classification head routes through a BERT
+  pooler this encoder never trained; with it the first epoch barely beat the
+  label-frequency baseline);
+* the head's bias starts at the log-odds of each label's training frequency, so
+  the network does not spend its first steps learning that most labels are off;
 * binary cross-entropy over all labels (independent sigmoids, not a softmax);
-* AdamW, linear warm-up then linear decay, gradient clipping at 1.0;
+* AdamW with a higher learning rate for the new head than for the pre-trained
+  encoder, linear warm-up then linear decay, gradient clipping at 1.0;
 * model selection: the epoch with the best validation macro PR-AUC is kept;
 * post-hoc temperature scaling fitted on validation logits, because fine-tuned
   networks are usually over-confident and the API exposes scores.
@@ -35,6 +42,23 @@ def _seed(seed: int) -> None:
     torch.manual_seed(seed)
 
 
+def _build(encoder: Any, n_labels: int, dropout: float = 0.1) -> Any:
+    import torch
+
+    class CLSClassifier(torch.nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.encoder = encoder
+            self.dropout = torch.nn.Dropout(dropout)
+            self.head = torch.nn.Linear(encoder.config.hidden_size, n_labels)
+
+        def forward(self, input_ids: Any, attention_mask: Any, **_: Any) -> Any:
+            hidden = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+            return self.head(self.dropout(hidden.last_hidden_state[:, 0]))
+
+    return CLSClassifier()
+
+
 class FineTuned:
     def __init__(
         self,
@@ -42,7 +66,8 @@ class FineTuned:
         max_length: int = 256,
         epochs: int = 3,
         batch_size: int = 32,
-        lr: float = 5e-5,
+        lr: float = 1e-4,
+        head_lr: float = 1e-3,
         warmup: float = 0.06,
         seed: int = 13,
     ) -> None:
@@ -54,11 +79,12 @@ class FineTuned:
             "epochs": epochs,
             "batch_size": batch_size,
             "lr": lr,
+            "head_lr": head_lr,
             "warmup": warmup,
             "seed": seed,
         }
         self.max_length, self.epochs, self.batch_size = max_length, epochs, batch_size
-        self.lr, self.warmup, self.seed = lr, warmup, seed
+        self.lr, self.head_lr, self.warmup, self.seed = lr, head_lr, warmup, seed
         self.temperature = 1.0
         self.weights_dir: Path | None = None
         self._net: Any = None
@@ -72,9 +98,12 @@ class FineTuned:
         return state
 
     def export(self, directory: Path) -> None:
+        import torch
+
         assert self._net is not None and self._tok is not None
-        self._net.save_pretrained(directory)
+        self._net.encoder.save_pretrained(directory)
         self._tok.save_pretrained(directory)
+        torch.save(self._net.head.state_dict(), directory / "head.pt")
 
     def attach(self, directory: Path) -> None:
         self.weights_dir = directory
@@ -82,12 +111,15 @@ class FineTuned:
     def _ensure_loaded(self) -> None:
         if self._net is not None:
             return
-        from transformers import AutoModelForSequenceClassification, AutoTokenizer
+        import torch
+        from transformers import AutoModel, AutoTokenizer
 
         if self.weights_dir is None:
             raise RuntimeError("weights not attached; load with Classifier.load()")
         self._tok = AutoTokenizer.from_pretrained(self.weights_dir)
-        self._net = AutoModelForSequenceClassification.from_pretrained(self.weights_dir)
+        head = torch.load(self.weights_dir / "head.pt", map_location="cpu")
+        self._net = _build(AutoModel.from_pretrained(self.weights_dir), head["weight"].shape[0])
+        self._net.head.load_state_dict(head)
         self._net.to(_device()).eval()
 
     # -- inference ---------------------------------------------------------
@@ -107,8 +139,8 @@ class FineTuned:
                     padding="max_length",
                     return_tensors="pt",
                 ).to(device)
-                out.append(self._net(**enc).logits.float().cpu().numpy())
-        return np.concatenate(out) if out else np.zeros((0, self._net.config.num_labels))
+                out.append(self._net(**enc).float().cpu().numpy())
+        return np.concatenate(out) if out else np.zeros((0, self._net.head.out_features))
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
         self._ensure_loaded()
@@ -117,18 +149,16 @@ class FineTuned:
     # -- training ----------------------------------------------------------
     def fit(self, texts: Texts, y: np.ndarray, val_texts: Texts, val_y: np.ndarray) -> FineTuned:
         import torch
-        from transformers import (
-            AutoModelForSequenceClassification,
-            AutoTokenizer,
-            get_linear_schedule_with_warmup,
-        )
+        from transformers import AutoModel, AutoTokenizer, get_linear_schedule_with_warmup
 
         _seed(self.seed)
         device = _device()
         self._tok = AutoTokenizer.from_pretrained(self.model_name)
-        self._net = AutoModelForSequenceClassification.from_pretrained(
-            self.model_name, num_labels=y.shape[1], problem_type="multi_label_classification"
-        ).to(device)
+        self._net = _build(AutoModel.from_pretrained(self.model_name), y.shape[1])
+        prior = np.clip(y.mean(axis=0), 1e-4, 1 - 1e-4)
+        with torch.no_grad():
+            self._net.head.bias.copy_(torch.tensor(np.log(prior / (1 - prior))))
+        self._net.to(device)
 
         # Tokenise once. Batches are padded to a fixed length: on Apple MPS every new
         # input shape compiles and caches a new graph, and dynamic padding grew the
@@ -139,7 +169,13 @@ class FineTuned:
 
         steps_per_epoch = math.ceil(len(texts) / self.batch_size)
         total = steps_per_epoch * self.epochs
-        opt = torch.optim.AdamW(self._net.parameters(), lr=self.lr, weight_decay=0.01)
+        opt = torch.optim.AdamW(
+            [
+                {"params": self._net.encoder.parameters(), "lr": self.lr},
+                {"params": self._net.head.parameters(), "lr": self.head_lr},
+            ],
+            weight_decay=0.01,
+        )
         sched = get_linear_schedule_with_warmup(opt, int(self.warmup * total), total)
         loss_fn = torch.nn.BCEWithLogitsLoss()
 
@@ -157,7 +193,7 @@ class FineTuned:
                     max_length=self.max_length,
                     return_tensors="pt",
                 ).to(device)
-                logits = self._net(**batch).logits
+                logits = self._net(**batch)
                 loss = loss_fn(logits, targets[idx].to(device))
                 opt.zero_grad()
                 loss.backward()
