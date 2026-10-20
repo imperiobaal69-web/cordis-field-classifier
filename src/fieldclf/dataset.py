@@ -6,7 +6,8 @@ Design decisions (see README, "Data"):
   Level 1 has six classes and is too coarse to be useful; level 3+ has hundreds of
   long-tail classes with a few dozen examples each.
 * **Leakage-safe split.** Projects whose normalised text is identical (resubmitted
-  fellowships, follow-up grants) share a *group*; groups, not rows, are assigned to
+  fellowships, follow-up grants) share a *group* (exact match after normalisation;
+  near-duplicates with edited wording are not caught); groups, not rows, are assigned to
   train/validation/test. The assignment is a hash of the group key, so it is stable
   when the export is refreshed and does not depend on row order.
 * **Temporal shift set.** Horizon Europe (2021-2027) projects are never used for

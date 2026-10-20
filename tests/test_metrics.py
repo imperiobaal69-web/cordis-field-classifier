@@ -41,3 +41,22 @@ def test_summary_perfect_prediction():
     m = summary(y, y.astype(float), y)
     assert m["micro_f1"] == m["macro_f1"] == m["macro_pr_auc"] == 1.0
     assert m["labels_per_project_pred"] == m["labels_per_project_true"]
+
+
+def test_bootstrap_matches_point_estimate_and_pairs():
+    from sklearn.metrics import f1_score
+
+    from fieldclf.metrics import bootstrap_f1, interval
+
+    rng = np.random.default_rng(3)
+    y = rng.integers(0, 2, size=(800, 5))
+    good = np.where(rng.uniform(size=y.shape) < 0.9, y, 1 - y)
+    bad = np.where(rng.uniform(size=y.shape) < 0.7, y, 1 - y)
+    a, b = bootstrap_f1(y, good, seed=1), bootstrap_f1(y, bad, seed=1)
+    point = f1_score(y, good, average="micro")
+    lo, hi = interval(a["micro_f1"])
+    assert lo < point < hi
+    assert hi - lo < 0.05
+    # Paired replicates: the better model wins in every resample.
+    assert (a["micro_f1"] - b["micro_f1"] > 0).all()
+    assert abs(a["macro_f1"].mean() - f1_score(y, good, average="macro")) < 0.01

@@ -21,13 +21,17 @@ out entirely** to measure how the model ages.
 ## Results
 
 <!-- results:start -->
-| Model | H2020 test micro-F1 | macro-F1 | Horizon Europe micro-F1 | macro-F1 | Calibration (ECE) | Train time | Inference |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| **Fine-tuned bge-small** (33M params) | **0.709** | **0.627** | **0.709** | **0.608** | 0.006 | 73 min, M4 GPU | 11 ms/doc, M4 GPU |
-| TF-IDF + logistic regression | 0.663 | 0.563 | 0.637 | 0.532 | 0.013 | 82 s, CPU | 0.3 ms/doc, CPU |
-| Frozen bge-small embeddings + logistic regression | 0.595 | 0.495 | 0.555 | 0.437 | 0.005 | 11 min | 26 ms/doc |
-| Label-frequency prior (no text) | 0.219 | 0.106 | 0.185 | 0.089 | 0.002 | - | - |
+| Model | H2020 test micro-F1 | macro-F1 | Horizon Europe micro-F1 | macro-F1 | ECE | Inference |
+| --- | --- | --- | --- | --- | ---: | ---: |
+| **Fine-tuned bge-small** (33M params) | **0.709** [0.700, 0.717] | **0.627** [0.611, 0.641] | **0.709** [0.705, 0.712] | **0.608** [0.601, 0.615] | 0.006 | 11 ms/doc, M4 GPU |
+| TF-IDF + logistic regression | 0.663 [0.655, 0.670] | 0.563 [0.548, 0.577] | 0.637 [0.634, 0.641] | 0.532 [0.524, 0.539] | 0.013 | 0.3 ms/doc, CPU |
+| Frozen bge-small embeddings + logistic regression | 0.595 [0.587, 0.603] | 0.495 [0.482, 0.507] | 0.555 [0.552, 0.559] | 0.437 [0.431, 0.442] | 0.005 | 26 ms/doc |
+| Label-frequency prior (no text) | 0.219 | 0.106 | 0.185 | 0.089 | 0.002 | - |
 
+Brackets: 95% bootstrap intervals over projects (1,000 resamples;
+[`reports/uncertainty.md`](reports/uncertainty.md), which also has paired
+model differences). Training time: fine-tune 73 min on an M4 GPU, TF-IDF 82 s
+on CPU, frozen embeddings 11 min.
 H2020 test: 3,261 projects. Horizon Europe: 20,147 projects, never seen in training
 or selection. Thresholds, hyper-parameters and the fine-tuning epoch were chosen on
 H2020 validation only.
@@ -40,10 +44,12 @@ What the numbers say:
 1. **Fine-tuning is what makes the encoder useful.** The same 33M-parameter
    encoder scores 0.595 frozen and 0.709 fine-tuned. Frozen general-purpose
    sentence embeddings lose to a well-regularised TF-IDF on fine-grained topic
-   labels; adapting them end-to-end wins by 4.6 points in-distribution.
-2. **The fine-tuned model ages better.** On the later programme TF-IDF loses 2.6
-   points of micro-F1; the fine-tuned model loses none (macro-F1 drops 1.9 points,
-   so rare fields still suffer). Both still predict more fields per project (2.47)
+   labels; adapting them end-to-end beats TF-IDF by 4.6 points in-distribution
+   (paired 95% interval 3.9 to 5.3).
+2. **The fine-tuned model ages better.** On the later programme TF-IDF loses 2.5
+   points of micro-F1 (95% interval 1.7 to 3.4); the fine-tuned model's change is
+   0.0 (-0.8 to +0.9). Its macro-F1 still drops 1.9 points (0.1 to 3.6), so rare
+   fields suffer. Both still predict more fields per project (2.47)
    than the newer labelling assigns (2.13).
 3. **Thresholds are not the fix for shift.** Re-tuning per-field thresholds on up
    to 4,042 labelled Horizon projects moves micro-F1 by at most 0.7 points for
@@ -64,7 +70,8 @@ What the numbers say:
 Full tables: [`reports/leaderboard.md`](reports/leaderboard.md),
 per-field metrics in [`reports/metrics/`](reports/metrics),
 [`reports/error_analysis.md`](reports/error_analysis.md),
-[`reports/adaptation.md`](reports/adaptation.md) and the
+[`reports/adaptation.md`](reports/adaptation.md),
+[`reports/uncertainty.md`](reports/uncertainty.md) and the
 [model card](MODEL_CARD.md).
 
 <p>
@@ -77,13 +84,14 @@ per-field metrics in [`reports/metrics/`](reports/metrics),
 | Problem | Decision | Where |
 | --- | --- | --- |
 | The CORDIS CSVs escape quotes inconsistently. `pandas.read_csv` drops **285 of 35,389** H2020 projects and returns a truncated or shifted objective for **960 more** - without raising. | A reader built on the two invariants the export does keep (record-start shape, `";"` field boundary), which checks the field count of every record and fails loudly if the format changes. | [`cordis.py`](src/fieldclf/cordis.py), [tests](tests/test_cordis.py) |
-| Some descriptions are duplicated across projects; a random row split leaks them from train into test. | Split by a hash of the normalised text (group split), stable across export refreshes. Horizon projects whose text appears in H2020 are removed from the shift set. | [`dataset.py`](src/fieldclf/dataset.py) |
+| Some descriptions are duplicated across projects; a random row split leaks them from train into test. | Split by a hash of the normalised text (group split), stable across export refreshes, so exact duplicates (after lower-casing and stripping punctuation) never straddle splits; Horizon projects whose normalised text appears in H2020 are removed from the shift set. Near-duplicates with edited wording are not detected. | [`dataset.py`](src/fieldclf/dataset.py) |
 | Accuracy on data from the same period overstates real-world performance. | Horizon Europe is never used for training, tuning or selection - only reported. | [`experiment.py`](src/fieldclf/experiment.py) |
 | One global 0.5 cut-off is wrong for 37 labels with 100x different frequencies. | Per-label thresholds that maximise validation F1; labels with fewer than 20 validation positives fall back to the global optimum; ties resolve to the centre of the plateau, not its edge. | [`metrics.py`](src/fieldclf/metrics.py) |
 | Every project has at least one field, so an empty prediction is always wrong. | If no label passes its threshold, the arg-max label is returned. | `decide()` |
 | The API exposes scores, so they must mean something. | Expected calibration error is reported for every model; the fine-tuned network gets post-hoc temperature scaling fitted on validation. | [`finetune.py`](src/fieldclf/finetune.py) |
 | The first full fine-tuning epoch barely beat the label-frequency baseline (validation macro PR-AUC 0.22). | Diagnosed: the stock sequence-classification head routes through a BERT pooler this encoder never trained. Replaced with a linear head on the [CLS] vector, its bias initialised to each label's log-odds and a 10x learning rate for the new head. Epoch 1 went to 0.61. | [`finetune.py`](src/fieldclf/finetune.py) |
 | Fine-tuning on Apple MPS grew to 13 GB within one epoch. | Diagnosed as per-shape graph caching from dynamic padding; fixed-length batches keep it at ~1 GB. | `FineTuned.fit` |
+| Point estimates alone can't support "model A beats model B" or "the model doesn't degrade". | 95% bootstrap intervals for every headline metric; the same resampled projects for every model, so model differences are paired. | [`metrics.py`](src/fieldclf/metrics.py), [`reports/uncertainty.md`](reports/uncertainty.md) |
 | A model artefact must be loadable without the training code's state. | One `Classifier` object (model + label list + thresholds + metadata); transformer weights stored in their native format beside the pickle. | [`predictor.py`](src/fieldclf/predictor.py) |
 
 ## Run it
@@ -148,13 +156,18 @@ Reproduce every number in this README: `make setup-all && make train && make fig
 
 ## Tests and CI
 
-`make test` runs 25 tests that need no network and no real data: synthetic
-archives reproduce the real export format, including the malformed quoting. They
-cover the parser (and document the pandas data loss), split determinism and
-leakage, threshold tuning, calibration, the end-to-end train -> save -> load ->
-serve path and the API's input validation. CI runs ruff, mypy and the tests,
-then trains a smoke model, builds the Docker image and calls the running
-container.
+`make test` runs 33 tests that need no network and no real data. Synthetic
+archives reproduce the real export format, including the malformed quoting.
+They cover the parser (and document the pandas data loss), split determinism
+and leakage, threshold tuning, calibration, the bootstrap intervals, the
+end-to-end train -> save -> load -> serve path and the API's input validation.
+Seven of them exercise fine-tuning on a tiny random BERT (training, temperature
+scaling, length-independent scoring, exact save/load round trip) and are skipped
+when the PyTorch extra is not installed.
+
+CI runs three jobs: ruff, mypy and the core tests; the fine-tuning tests with
+CPU PyTorch; and, after the core tests pass, a smoke model is trained, the
+Docker image built and the running container called.
 
 ## Layout
 

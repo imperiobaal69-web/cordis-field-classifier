@@ -17,7 +17,14 @@ import pandas as pd
 
 from fieldclf.dataset import label_matrix, load
 from fieldclf.experiment import leaderboard
-from fieldclf.metrics import decide, reliability_curve, summary, tune_thresholds
+from fieldclf.metrics import (
+    bootstrap_f1,
+    decide,
+    interval,
+    reliability_curve,
+    summary,
+    tune_thresholds,
+)
 
 REPORTS, ARTIFACTS, DATA = Path("reports"), Path("artifacts"), Path("data/processed")
 FIG = REPORTS / "figures"
@@ -280,6 +287,77 @@ def adaptation(df: pd.DataFrame, vocab: list[str], models: list[str]) -> pd.Data
     return out
 
 
+def uncertainty(df: pd.DataFrame, vocab: list[str], models: list[str]) -> str:
+    """95% bootstrap intervals, paired model differences and shift drops."""
+    boots: dict[tuple[str, str], dict[str, np.ndarray]] = {}
+    points: dict[tuple[str, str], dict[str, float]] = {}
+    for name in models:
+        slug = name.replace(":", "__")
+        report = json.loads((REPORTS / "metrics" / f"{slug}.json").read_text())
+        thresholds = np.array([report["thresholds"][v] for v in vocab])
+        p = np.load(ARTIFACTS / slug / "predictions.npz", allow_pickle=True)
+        for split, seed in (("test", 101), ("shift", 202)):
+            y = label_matrix(df.set_index("id").loc[p[split + "_ids"]]["labels"], vocab)
+            pred = decide(p[split], thresholds)
+            # Same seed per split for every model -> paired replicates.
+            boots[(name, split)] = bootstrap_f1(y, pred, n_boot=1000, seed=seed)
+            points[(name, split)] = report["results"][split]
+
+    def fmt(point: float, samples: np.ndarray) -> str:
+        lo, hi = interval(samples)
+        return f"{point:.3f} [{lo:.3f}, {hi:.3f}]"
+
+    lines = [
+        "# Uncertainty",
+        "",
+        "95% percentile intervals from 1,000 bootstrap resamples of projects.",
+        "Within a split every model is resampled with the same project draws, so",
+        "differences between models are paired.",
+        "",
+        "| model | split | micro-F1 | macro-F1 |",
+        "| --- | --- | --- | --- |",
+    ]
+    for name in models:
+        for split in ("test", "shift"):
+            b, pt = boots[(name, split)], points[(name, split)]
+            lines.append(
+                f"| {name} | {split} | {fmt(pt['micro_f1'], b['micro_f1'])} | "
+                f"{fmt(pt['macro_f1'], b['macro_f1'])} |"
+            )
+    lines += [
+        "",
+        "## Paired differences (row model minus column model)",
+        "",
+        "| comparison | split | micro-F1 difference | macro-F1 difference |",
+        "| --- | --- | --- | --- |",
+    ]
+    best = models[0]
+    for other in models[1:]:
+        for split in ("test", "shift"):
+            a, b = boots[(best, split)], boots[(other, split)]
+            pa, pb = points[(best, split)], points[(other, split)]
+            lines.append(
+                f"| {best} - {other} | {split} | "
+                f"{fmt(pa['micro_f1'] - pb['micro_f1'], a['micro_f1'] - b['micro_f1'])} | "
+                f"{fmt(pa['macro_f1'] - pb['macro_f1'], a['macro_f1'] - b['macro_f1'])} |"
+            )
+    lines += [
+        "",
+        "## Shift drop (Horizon Europe minus H2020 test, independent samples)",
+        "",
+        "| model | micro-F1 change | macro-F1 change |",
+        "| --- | --- | --- |",
+    ]
+    for name in models:
+        t, s = boots[(name, "test")], boots[(name, "shift")]
+        pt, ps = points[(name, "test")], points[(name, "shift")]
+        lines.append(
+            f"| {name} | {fmt(ps['micro_f1'] - pt['micro_f1'], s['micro_f1'] - t['micro_f1'])} | "
+            f"{fmt(ps['macro_f1'] - pt['macro_f1'], s['macro_f1'] - t['macro_f1'])} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     FIG.mkdir(parents=True, exist_ok=True)
     board = leaderboard(REPORTS)
@@ -312,6 +390,7 @@ def main() -> None:
     (REPORTS / "error_analysis.md").write_text(error_analysis(slug, df, vocab))
 
     models = [m for m in board["model"] if m != "prior"]
+    (REPORTS / "uncertainty.md").write_text(uncertainty(df, vocab, models))
     adapt = adaptation(df, vocab, models)
     (REPORTS / "adaptation.md").write_text(
         "# Threshold re-tuning on a small labelled Horizon Europe sample\n\n"

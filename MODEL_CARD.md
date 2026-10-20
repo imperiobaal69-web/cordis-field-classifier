@@ -24,8 +24,8 @@ each with a score and the decision threshold used.
 CORDIS Horizon 2020 projects (2014-2020), official bulk export from
 data.europa.eu, reused under the European Commission reuse notice
 (Decision 2011/833/EU). 25,801 training / 3,159 validation / 3,261 test
-projects, split by a hash of the normalised text so duplicated descriptions
-never straddle splits.
+projects, split by a hash of the normalised text so exactly duplicated
+descriptions never straddle splits (near-duplicates are not detected).
 
 Labels are the EuroSciVoc paths that CORDIS attaches to each project, truncated
 to level 2. CORDIS marks most of these as **not human-validated** (only 725 H2020

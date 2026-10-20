@@ -123,3 +123,31 @@ def per_label(
             }
         )
     return rows
+
+
+def bootstrap_f1(
+    y_true: np.ndarray, pred: np.ndarray, n_boot: int = 1000, seed: int = 0
+) -> dict[str, np.ndarray]:
+    """Bootstrap distribution of micro- and macro-F1 over projects.
+
+    Projects are resampled with replacement (as multinomial weights, so each
+    replicate costs one matrix product). Macro-F1 averages the labels present
+    in ``y_true``, matching :func:`summary`. Passing the same ``seed`` for two
+    models evaluated on the same projects gives paired replicates, so their
+    difference has a valid bootstrap distribution too.
+    """
+    present = y_true.sum(axis=0) > 0
+    yt, yp = y_true[:, present].astype(np.int64), pred[:, present].astype(np.int64)
+    tp, fp, fn = yt * yp, (1 - yt) * yp, yt * (1 - yp)
+    rng = np.random.default_rng(seed)
+    w = rng.multinomial(len(yt), np.full(len(yt), 1 / len(yt)), size=n_boot).astype(np.float64)
+    tp_l, fp_l, fn_l = w @ tp, w @ fp, w @ fn
+    micro = 2 * tp_l.sum(1) / np.maximum(2 * tp_l.sum(1) + fp_l.sum(1) + fn_l.sum(1), 1)
+    per_label = 2 * tp_l / np.maximum(2 * tp_l + fp_l + fn_l, 1)
+    return {"micro_f1": micro, "macro_f1": per_label.mean(axis=1)}
+
+
+def interval(samples: np.ndarray, level: float = 0.95) -> tuple[float, float]:
+    """Percentile interval of a bootstrap distribution."""
+    lo, hi = np.quantile(samples, [(1 - level) / 2, 1 - (1 - level) / 2])
+    return float(lo), float(hi)
