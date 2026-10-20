@@ -1,0 +1,718 @@
+{
+  "model": "finetune:bge-small-en-v1.5",
+  "params": {
+    "encoder": "BAAI/bge-small-en-v1.5",
+    "max_length": 256,
+    "epochs": 3,
+    "batch_size": 32,
+    "lr": 0.0001,
+    "head_lr": 0.001,
+    "warmup": 0.06,
+    "seed": 13,
+    "history": [
+      {
+        "epoch": 1,
+        "train_loss": 0.1378,
+        "val_macro_pr_auc": 0.6132,
+        "seconds": 1489.7
+      },
+      {
+        "epoch": 2,
+        "train_loss": 0.1056,
+        "val_macro_pr_auc": 0.6576,
+        "seconds": 1424.8
+      },
+      {
+        "epoch": 3,
+        "train_loss": 0.093,
+        "val_macro_pr_auc": 0.6662,
+        "seconds": 1376.1
+      }
+    ],
+    "temperature": 1.05
+  },
+  "train_size": 25801,
+  "fit_seconds": 4353.3,
+  "thresholds": {
+    "agricultural sciences/agriculture, forestry, and fisheries": 0.3,
+    "agricultural sciences/animal and dairy science": 0.72,
+    "engineering and technology/chemical engineering": 0.22,
+    "engineering and technology/civil engineering": 0.44,
+    "engineering and technology/electrical engineering, electronic engineering, information engineering": 0.32,
+    "engineering and technology/environmental biotechnology": 0.32,
+    "engineering and technology/environmental engineering": 0.46,
+    "engineering and technology/industrial biotechnology": 0.48,
+    "engineering and technology/materials engineering": 0.45,
+    "engineering and technology/mechanical engineering": 0.44,
+    "engineering and technology/medical engineering": 0.5,
+    "engineering and technology/nanotechnology": 0.51,
+    "engineering and technology/other engineering and technologies": 0.2,
+    "humanities/arts": 0.41,
+    "humanities/history and archaeology": 0.34,
+    "humanities/languages and literature": 0.32,
+    "humanities/other humanities": 0.38,
+    "humanities/philosophy, ethics and religion": 0.39,
+    "medical and health sciences/basic medicine": 0.62,
+    "medical and health sciences/clinical medicine": 0.7,
+    "medical and health sciences/health sciences": 0.5,
+    "medical and health sciences/medical biotechnology": 0.32,
+    "natural sciences/biological sciences": 0.45,
+    "natural sciences/chemical sciences": 0.38,
+    "natural sciences/computer and information sciences": 0.34,
+    "natural sciences/earth and related environmental sciences": 0.48,
+    "natural sciences/mathematics": 0.31,
+    "natural sciences/physical sciences": 0.34,
+    "social sciences/economics and business": 0.36,
+    "social sciences/educational sciences": 0.42,
+    "social sciences/law": 0.26,
+    "social sciences/media and communications": 0.38,
+    "social sciences/other social sciences": 0.22,
+    "social sciences/political sciences": 0.35,
+    "social sciences/psychology": 0.41,
+    "social sciences/social geography": 0.63,
+    "social sciences/sociology": 0.47
+  },
+  "results": {
+    "test": {
+      "micro_f1": 0.7085164008426121,
+      "macro_f1": 0.6274702289405221,
+      "samples_f1": 0.7089070934517117,
+      "micro_precision": 0.729187314172448,
+      "micro_recall": 0.6889851340278591,
+      "macro_pr_auc": 0.6652340355279714,
+      "ece": 0.005588778343845438,
+      "labels_per_project_true": 2.6197485433915975,
+      "labels_per_project_pred": 2.475314320760503,
+      "n": 3261,
+      "ms_per_doc": 11.201
+    },
+    "test_per_label": [
+      {
+        "label": "agricultural sciences/agriculture, forestry, and fisheries",
+        "support": 189,
+        "precision": 0.7045454545454546,
+        "recall": 0.8201058201058201,
+        "f1": 0.7579462102689487,
+        "pr_auc": 0.7986600144180285
+      },
+      {
+        "label": "agricultural sciences/animal and dairy science",
+        "support": 43,
+        "precision": 0.7777777777777778,
+        "recall": 0.4883720930232558,
+        "f1": 0.6,
+        "pr_auc": 0.7071527778178491
+      },
+      {
+        "label": "engineering and technology/chemical engineering",
+        "support": 35,
+        "precision": 0.5714285714285714,
+        "recall": 0.5714285714285714,
+        "f1": 0.5714285714285714,
+        "pr_auc": 0.46287833420896185
+      },
+      {
+        "label": "engineering and technology/civil engineering",
+        "support": 91,
+        "precision": 0.71875,
+        "recall": 0.5054945054945055,
+        "f1": 0.5935483870967742,
+        "pr_auc": 0.6162660568735108
+      },
+      {
+        "label": "engineering and technology/electrical engineering, electronic engineering, information engineering",
+        "support": 566,
+        "precision": 0.6919354838709677,
+        "recall": 0.7579505300353356,
+        "f1": 0.7234401349072512,
+        "pr_auc": 0.7926821742081598
+      },
+      {
+        "label": "engineering and technology/environmental biotechnology",
+        "support": 33,
+        "precision": 0.68,
+        "recall": 0.5151515151515151,
+        "f1": 0.5862068965517241,
+        "pr_auc": 0.5514187834510086
+      },
+      {
+        "label": "engineering and technology/environmental engineering",
+        "support": 508,
+        "precision": 0.7642276422764228,
+        "recall": 0.7401574803149606,
+        "f1": 0.752,
+        "pr_auc": 0.8211454276170691
+      },
+      {
+        "label": "engineering and technology/industrial biotechnology",
+        "support": 57,
+        "precision": 0.6274509803921569,
+        "recall": 0.5614035087719298,
+        "f1": 0.5925925925925926,
+        "pr_auc": 0.6162864580549643
+      },
+      {
+        "label": "engineering and technology/materials engineering",
+        "support": 237,
+        "precision": 0.7087378640776699,
+        "recall": 0.6160337552742616,
+        "f1": 0.6591422121896162,
+        "pr_auc": 0.6939426558264064
+      },
+      {
+        "label": "engineering and technology/mechanical engineering",
+        "support": 310,
+        "precision": 0.7290969899665551,
+        "recall": 0.7032258064516129,
+        "f1": 0.715927750410509,
+        "pr_auc": 0.7981752132677343
+      },
+      {
+        "label": "engineering and technology/medical engineering",
+        "support": 54,
+        "precision": 0.5476190476190477,
+        "recall": 0.42592592592592593,
+        "f1": 0.4791666666666667,
+        "pr_auc": 0.5215658400646561
+      },
+      {
+        "label": "engineering and technology/nanotechnology",
+        "support": 131,
+        "precision": 0.7557251908396947,
+        "recall": 0.7557251908396947,
+        "f1": 0.7557251908396947,
+        "pr_auc": 0.7246168755888069
+      },
+      {
+        "label": "engineering and technology/other engineering and technologies",
+        "support": 58,
+        "precision": 0.4111111111111111,
+        "recall": 0.6379310344827587,
+        "f1": 0.5,
+        "pr_auc": 0.5403925209569383
+      },
+      {
+        "label": "humanities/arts",
+        "support": 61,
+        "precision": 0.6666666666666666,
+        "recall": 0.6557377049180327,
+        "f1": 0.6611570247933884,
+        "pr_auc": 0.6872297350301897
+      },
+      {
+        "label": "humanities/history and archaeology",
+        "support": 187,
+        "precision": 0.7194570135746606,
+        "recall": 0.8502673796791443,
+        "f1": 0.7794117647058824,
+        "pr_auc": 0.8256444147978559
+      },
+      {
+        "label": "humanities/languages and literature",
+        "support": 40,
+        "precision": 0.5471698113207547,
+        "recall": 0.725,
+        "f1": 0.6236559139784946,
+        "pr_auc": 0.6269100988639632
+      },
+      {
+        "label": "humanities/other humanities",
+        "support": 20,
+        "precision": 0.75,
+        "recall": 0.15,
+        "f1": 0.25,
+        "pr_auc": 0.386206463540297
+      },
+      {
+        "label": "humanities/philosophy, ethics and religion",
+        "support": 67,
+        "precision": 0.6774193548387096,
+        "recall": 0.6268656716417911,
+        "f1": 0.6511627906976745,
+        "pr_auc": 0.6911557828533476
+      },
+      {
+        "label": "medical and health sciences/basic medicine",
+        "support": 427,
+        "precision": 0.7979002624671916,
+        "recall": 0.711943793911007,
+        "f1": 0.7524752475247525,
+        "pr_auc": 0.8164686432986836
+      },
+      {
+        "label": "medical and health sciences/clinical medicine",
+        "support": 466,
+        "precision": 0.8801955990220048,
+        "recall": 0.7725321888412017,
+        "f1": 0.8228571428571428,
+        "pr_auc": 0.911966234193905
+      },
+      {
+        "label": "medical and health sciences/health sciences",
+        "support": 279,
+        "precision": 0.7678571428571429,
+        "recall": 0.6164874551971327,
+        "f1": 0.68389662027833,
+        "pr_auc": 0.744087745804863
+      },
+      {
+        "label": "medical and health sciences/medical biotechnology",
+        "support": 153,
+        "precision": 0.6838235294117647,
+        "recall": 0.6078431372549019,
+        "f1": 0.643598615916955,
+        "pr_auc": 0.6375662884885335
+      },
+      {
+        "label": "natural sciences/biological sciences",
+        "support": 817,
+        "precision": 0.823086574654956,
+        "recall": 0.802937576499388,
+        "f1": 0.8128872366790583,
+        "pr_auc": 0.8961685035933077
+      },
+      {
+        "label": "natural sciences/chemical sciences",
+        "support": 436,
+        "precision": 0.7307692307692307,
+        "recall": 0.6972477064220184,
+        "f1": 0.7136150234741784,
+        "pr_auc": 0.7780096147520433
+      },
+      {
+        "label": "natural sciences/computer and information sciences",
+        "support": 824,
+        "precision": 0.7267156862745098,
+        "recall": 0.7196601941747572,
+        "f1": 0.723170731707317,
+        "pr_auc": 0.7980336384842263
+      },
+      {
+        "label": "natural sciences/earth and related environmental sciences",
+        "support": 272,
+        "precision": 0.710204081632653,
+        "recall": 0.6397058823529411,
+        "f1": 0.6731141199226306,
+        "pr_auc": 0.6861496651434998
+      },
+      {
+        "label": "natural sciences/mathematics",
+        "support": 226,
+        "precision": 0.6650943396226415,
+        "recall": 0.6238938053097345,
+        "f1": 0.6438356164383562,
+        "pr_auc": 0.6934498587662703
+      },
+      {
+        "label": "natural sciences/physical sciences",
+        "support": 558,
+        "precision": 0.7571428571428571,
+        "recall": 0.7598566308243727,
+        "f1": 0.7584973166368515,
+        "pr_auc": 0.8308180901030083
+      },
+      {
+        "label": "social sciences/economics and business",
+        "support": 485,
+        "precision": 0.6331096196868009,
+        "recall": 0.5835051546391753,
+        "f1": 0.6072961373390557,
+        "pr_auc": 0.6662401900795515
+      },
+      {
+        "label": "social sciences/educational sciences",
+        "support": 38,
+        "precision": 0.6428571428571429,
+        "recall": 0.47368421052631576,
+        "f1": 0.5454545454545454,
+        "pr_auc": 0.6074594573259874
+      },
+      {
+        "label": "social sciences/law",
+        "support": 81,
+        "precision": 0.6235294117647059,
+        "recall": 0.654320987654321,
+        "f1": 0.6385542168674698,
+        "pr_auc": 0.6136191050832849
+      },
+      {
+        "label": "social sciences/media and communications",
+        "support": 18,
+        "precision": 0.5,
+        "recall": 0.1111111111111111,
+        "f1": 0.18181818181818182,
+        "pr_auc": 0.2355951314639256
+      },
+      {
+        "label": "social sciences/other social sciences",
+        "support": 48,
+        "precision": 0.5714285714285714,
+        "recall": 0.3333333333333333,
+        "f1": 0.42105263157894735,
+        "pr_auc": 0.3513051397979549
+      },
+      {
+        "label": "social sciences/political sciences",
+        "support": 187,
+        "precision": 0.70625,
+        "recall": 0.6042780748663101,
+        "f1": 0.6512968299711815,
+        "pr_auc": 0.696465665389365
+      },
+      {
+        "label": "social sciences/psychology",
+        "support": 65,
+        "precision": 0.625,
+        "recall": 0.38461538461538464,
+        "f1": 0.47619047619047616,
+        "pr_auc": 0.4978989919136828
+      },
+      {
+        "label": "social sciences/social geography",
+        "support": 96,
+        "precision": 0.7205882352941176,
+        "recall": 0.5104166666666666,
+        "f1": 0.5975609756097561,
+        "pr_auc": 0.6179661228383587
+      },
+      {
+        "label": "social sciences/sociology",
+        "support": 380,
+        "precision": 0.6815286624203821,
+        "recall": 0.5631578947368421,
+        "f1": 0.6167146974063401,
+        "pr_auc": 0.6720616005747484
+      }
+    ],
+    "shift": {
+      "micro_f1": 0.7085463999827389,
+      "macro_f1": 0.6082452668886367,
+      "samples_f1": 0.7016002260728522,
+      "micro_precision": 0.6588620039324264,
+      "micro_recall": 0.7663352935685616,
+      "macro_pr_auc": 0.6219690761957889,
+      "ece": 0.01736041176599943,
+      "labels_per_project_true": 2.126966794063632,
+      "labels_per_project_pred": 2.473916712165583,
+      "n": 20147,
+      "ms_per_doc": 11.457
+    },
+    "shift_per_label": [
+      {
+        "label": "agricultural sciences/agriculture, forestry, and fisheries",
+        "support": 1250,
+        "precision": 0.723404255319149,
+        "recall": 0.816,
+        "f1": 0.7669172932330827,
+        "pr_auc": 0.8006340565342775
+      },
+      {
+        "label": "agricultural sciences/animal and dairy science",
+        "support": 161,
+        "precision": 0.7909090909090909,
+        "recall": 0.5403726708074534,
+        "f1": 0.6420664206642066,
+        "pr_auc": 0.7277581824347268
+      },
+      {
+        "label": "engineering and technology/chemical engineering",
+        "support": 134,
+        "precision": 0.378698224852071,
+        "recall": 0.47761194029850745,
+        "f1": 0.42244224422442245,
+        "pr_auc": 0.41575388725911344
+      },
+      {
+        "label": "engineering and technology/civil engineering",
+        "support": 243,
+        "precision": 0.46190476190476193,
+        "recall": 0.3991769547325103,
+        "f1": 0.4282560706401766,
+        "pr_auc": 0.3764520992884984
+      },
+      {
+        "label": "engineering and technology/electrical engineering, electronic engineering, information engineering",
+        "support": 2178,
+        "precision": 0.5959944751381215,
+        "recall": 0.7924701561065197,
+        "f1": 0.6803310997240836,
+        "pr_auc": 0.7443650657388213
+      },
+      {
+        "label": "engineering and technology/environmental biotechnology",
+        "support": 169,
+        "precision": 0.4838709677419355,
+        "recall": 0.35502958579881655,
+        "f1": 0.40955631399317405,
+        "pr_auc": 0.4062228670945863
+      },
+      {
+        "label": "engineering and technology/environmental engineering",
+        "support": 2325,
+        "precision": 0.6201155283724091,
+        "recall": 0.7849462365591398,
+        "f1": 0.6928625664388762,
+        "pr_auc": 0.7216339423321148
+      },
+      {
+        "label": "engineering and technology/industrial biotechnology",
+        "support": 344,
+        "precision": 0.5896103896103896,
+        "recall": 0.6598837209302325,
+        "f1": 0.6227709190672154,
+        "pr_auc": 0.6167386054835311
+      },
+      {
+        "label": "engineering and technology/materials engineering",
+        "support": 1028,
+        "precision": 0.6331409727947238,
+        "recall": 0.7470817120622568,
+        "f1": 0.6854082998661312,
+        "pr_auc": 0.6824678662908839
+      },
+      {
+        "label": "engineering and technology/mechanical engineering",
+        "support": 954,
+        "precision": 0.5821484992101106,
+        "recall": 0.7725366876310272,
+        "f1": 0.663963963963964,
+        "pr_auc": 0.6739367721844886
+      },
+      {
+        "label": "engineering and technology/medical engineering",
+        "support": 142,
+        "precision": 0.30303030303030304,
+        "recall": 0.352112676056338,
+        "f1": 0.3257328990228013,
+        "pr_auc": 0.2646019744080746
+      },
+      {
+        "label": "engineering and technology/nanotechnology",
+        "support": 807,
+        "precision": 0.7520435967302452,
+        "recall": 0.6840148698884758,
+        "f1": 0.7164179104477612,
+        "pr_auc": 0.724312881255923
+      },
+      {
+        "label": "engineering and technology/other engineering and technologies",
+        "support": 201,
+        "precision": 0.3157894736842105,
+        "recall": 0.6268656716417911,
+        "f1": 0.42,
+        "pr_auc": 0.3822147919150242
+      },
+      {
+        "label": "humanities/arts",
+        "support": 284,
+        "precision": 0.653968253968254,
+        "recall": 0.7253521126760564,
+        "f1": 0.6878130217028381,
+        "pr_auc": 0.6832789747174003
+      },
+      {
+        "label": "humanities/history and archaeology",
+        "support": 1239,
+        "precision": 0.7411371237458194,
+        "recall": 0.8942695722356739,
+        "f1": 0.8105340160936357,
+        "pr_auc": 0.8469229757107414
+      },
+      {
+        "label": "humanities/languages and literature",
+        "support": 291,
+        "precision": 0.5282555282555282,
+        "recall": 0.738831615120275,
+        "f1": 0.6160458452722063,
+        "pr_auc": 0.6624632158625813
+      },
+      {
+        "label": "humanities/other humanities",
+        "support": 64,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "pr_auc": 0.06302060552954573
+      },
+      {
+        "label": "humanities/philosophy, ethics and religion",
+        "support": 439,
+        "precision": 0.7601809954751131,
+        "recall": 0.765375854214123,
+        "f1": 0.7627695800227015,
+        "pr_auc": 0.7718493411657549
+      },
+      {
+        "label": "medical and health sciences/basic medicine",
+        "support": 2327,
+        "precision": 0.7301713830211239,
+        "recall": 0.7872797593467985,
+        "f1": 0.7576509511993383,
+        "pr_auc": 0.8019204521408934
+      },
+      {
+        "label": "medical and health sciences/clinical medicine",
+        "support": 2531,
+        "precision": 0.8270008084074374,
+        "recall": 0.8083761359146583,
+        "f1": 0.8175824175824176,
+        "pr_auc": 0.8540716338816725
+      },
+      {
+        "label": "medical and health sciences/health sciences",
+        "support": 1333,
+        "precision": 0.6352785145888594,
+        "recall": 0.7186796699174793,
+        "f1": 0.6744104188665963,
+        "pr_auc": 0.6876828408054828
+      },
+      {
+        "label": "medical and health sciences/medical biotechnology",
+        "support": 543,
+        "precision": 0.41333333333333333,
+        "recall": 0.6850828729281768,
+        "f1": 0.5155925155925156,
+        "pr_auc": 0.46139072759509797
+      },
+      {
+        "label": "natural sciences/biological sciences",
+        "support": 5403,
+        "precision": 0.7976043685044918,
+        "recall": 0.8380529335554322,
+        "f1": 0.8173285198555956,
+        "pr_auc": 0.8838589703991844
+      },
+      {
+        "label": "natural sciences/chemical sciences",
+        "support": 2523,
+        "precision": 0.6988521269412559,
+        "recall": 0.8204518430439952,
+        "f1": 0.7547857793983591,
+        "pr_auc": 0.7971215318824927
+      },
+      {
+        "label": "natural sciences/computer and information sciences",
+        "support": 3271,
+        "precision": 0.5498699045967043,
+        "recall": 0.7752980739834913,
+        "f1": 0.6434098693390841,
+        "pr_auc": 0.6683743219303404
+      },
+      {
+        "label": "natural sciences/earth and related environmental sciences",
+        "support": 1764,
+        "precision": 0.5988319856244384,
+        "recall": 0.7556689342403629,
+        "f1": 0.6681704260651629,
+        "pr_auc": 0.6554537288963828
+      },
+      {
+        "label": "natural sciences/mathematics",
+        "support": 850,
+        "precision": 0.5493562231759657,
+        "recall": 0.7529411764705882,
+        "f1": 0.6352357320099256,
+        "pr_auc": 0.7087440031916645
+      },
+      {
+        "label": "natural sciences/physical sciences",
+        "support": 3420,
+        "precision": 0.7333162873945283,
+        "recall": 0.8385964912280702,
+        "f1": 0.7824307734279089,
+        "pr_auc": 0.8521759025104169
+      },
+      {
+        "label": "social sciences/economics and business",
+        "support": 1766,
+        "precision": 0.52587890625,
+        "recall": 0.6098527746319365,
+        "f1": 0.5647614053487152,
+        "pr_auc": 0.5803672241169292
+      },
+      {
+        "label": "social sciences/educational sciences",
+        "support": 168,
+        "precision": 0.696969696969697,
+        "recall": 0.5476190476190477,
+        "f1": 0.6133333333333333,
+        "pr_auc": 0.6241984754114638
+      },
+      {
+        "label": "social sciences/law",
+        "support": 516,
+        "precision": 0.6253968253968254,
+        "recall": 0.7635658914728682,
+        "f1": 0.68760907504363,
+        "pr_auc": 0.7003777720549299
+      },
+      {
+        "label": "social sciences/media and communications",
+        "support": 57,
+        "precision": 0.6666666666666666,
+        "recall": 0.2807017543859649,
+        "f1": 0.3950617283950617,
+        "pr_auc": 0.35492985915318204
+      },
+      {
+        "label": "social sciences/other social sciences",
+        "support": 149,
+        "precision": 0.3181818181818182,
+        "recall": 0.3288590604026846,
+        "f1": 0.3234323432343234,
+        "pr_auc": 0.2953216145339508
+      },
+      {
+        "label": "social sciences/political sciences",
+        "support": 973,
+        "precision": 0.5836092715231788,
+        "recall": 0.7245632065775951,
+        "f1": 0.6464924346629987,
+        "pr_auc": 0.6551095162070673
+      },
+      {
+        "label": "social sciences/psychology",
+        "support": 336,
+        "precision": 0.6373239436619719,
+        "recall": 0.5386904761904762,
+        "f1": 0.5838709677419355,
+        "pr_auc": 0.5878939845680515
+      },
+      {
+        "label": "social sciences/social geography",
+        "support": 279,
+        "precision": 0.5309090909090909,
+        "recall": 0.5232974910394266,
+        "f1": 0.5270758122743683,
+        "pr_auc": 0.5007120817264924
+      },
+      {
+        "label": "social sciences/sociology",
+        "support": 2390,
+        "precision": 0.7362366474938373,
+        "recall": 0.7497907949790795,
+        "f1": 0.7429519071310116,
+        "pr_auc": 0.7785230730324039
+      }
+    ],
+    "shift_human_validated": {
+      "micro_f1": 0.6557438093464905,
+      "macro_f1": 0.5404467913376891,
+      "samples_f1": 0.6570243017505135,
+      "micro_precision": 0.6567219839641991,
+      "micro_recall": 0.6547685443390965,
+      "macro_pr_auc": 0.586278444871385,
+      "ece": 0.010076114574583838,
+      "labels_per_project_true": 2.4142728904847397,
+      "labels_per_project_pred": 2.407091561938959,
+      "n": 2228,
+      "ms_per_doc": 11.392
+    }
+  },
+  "env": {
+    "package": "0.1.0",
+    "commit": "bc994d7",
+    "python": "3.12.15",
+    "machine": "arm64"
+  }
+}

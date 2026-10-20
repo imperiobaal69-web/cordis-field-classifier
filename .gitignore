@@ -8,3 +8,4 @@ data/raw/
 data/processed/
 artifacts/
 !tests/fixtures/**
+data/cache/

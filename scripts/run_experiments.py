@@ -1,4 +1,4 @@
-"""Reproduce every row of the README leaderboard (about 2 hours on an Apple M4, most of it fine-tuning)."""
+"""Reproduce every leaderboard row (about 2 hours on an Apple M4, mostly fine-tuning)."""
 
 import sys
 from pathlib import Path
