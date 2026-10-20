@@ -23,6 +23,23 @@ jobs:
       - name: Tests
         run: uv run pytest -q
 
+  finetune:
+    # The fine-tuning path needs PyTorch, which the core install leaves out.
+    # CPU wheels keep the job small; the tests use a tiny random BERT.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.13.1"
+      - run: uv sync --frozen --group dev
+      - name: Install CPU PyTorch and Transformers
+        run: |
+          uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+          uv pip install "transformers>=4.44" "accelerate>=0.33"
+      - name: Fine-tuning tests
+        run: uv run --no-sync pytest -q tests/test_finetune.py
+
   image:
     runs-on: ubuntu-latest
     needs: test

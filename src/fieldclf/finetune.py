@@ -31,7 +31,7 @@ from typing import Any
 import numpy as np
 from sklearn.metrics import average_precision_score
 
-from fieldclf.models import Texts, _device
+from fieldclf.models import NotFittedError, Texts, _device
 
 
 def _seed(seed: int) -> None:
@@ -100,7 +100,8 @@ class FineTuned:
     def export(self, directory: Path) -> None:
         import torch
 
-        assert self._net is not None and self._tok is not None
+        if self._net is None or self._tok is None:
+            raise NotFittedError(f"{self.name} has no weights to export")
         self._net.encoder.save_pretrained(directory)
         self._tok.save_pretrained(directory)
         torch.save(self._net.head.state_dict(), directory / "head.pt")
@@ -115,7 +116,7 @@ class FineTuned:
         from transformers import AutoModel, AutoTokenizer
 
         if self.weights_dir is None:
-            raise RuntimeError("weights not attached; load with Classifier.load()")
+            raise NotFittedError(f"{self.name} has no weights; fit() or Classifier.load() first")
         self._tok = AutoTokenizer.from_pretrained(self.weights_dir)
         head = torch.load(self.weights_dir / "head.pt", map_location="cpu")
         self._net = _build(AutoModel.from_pretrained(self.weights_dir), head["weight"].shape[0])
@@ -126,7 +127,8 @@ class FineTuned:
     def _logits(self, texts: Texts, batch_size: int = 64) -> np.ndarray:
         import torch
 
-        assert self._net is not None and self._tok is not None
+        if self._net is None or self._tok is None:
+            raise NotFittedError(f"{self.name} is not fitted")
         device = next(self._net.parameters()).device
         out = []
         self._net.eval()
@@ -155,9 +157,8 @@ class FineTuned:
         device = _device()
         self._tok = AutoTokenizer.from_pretrained(self.model_name)
         self._net = _build(AutoModel.from_pretrained(self.model_name), y.shape[1])
-        prior = np.clip(y.mean(axis=0), 1e-4, 1 - 1e-4)
         with torch.no_grad():
-            self._net.head.bias.copy_(torch.tensor(np.log(prior / (1 - prior))))
+            self._net.head.bias.copy_(torch.tensor(prior_logits(y), dtype=torch.float32))
         self._net.to(device)
 
         # Tokenise once. Batches are padded to a fixed length: on Apple MPS every new
@@ -227,11 +228,19 @@ class FineTuned:
                 best_score = score
                 best_state = copy.deepcopy({k: v.cpu() for k, v in self._net.state_dict().items()})
 
-        assert best_state is not None
+        if best_state is None:
+            raise RuntimeError("no epoch produced a finite validation score")
         self._net.load_state_dict(best_state)
         self.temperature = _fit_temperature(self._logits(val_texts), val_y)
         self.params |= {"history": history, "temperature": round(self.temperature, 3)}
         return self
+
+
+def prior_logits(y: np.ndarray) -> np.ndarray:
+    """Log-odds of each label's training frequency: the head's starting bias, so an
+    untrained network already predicts the label prior instead of 0.5."""
+    prior = np.clip(y.mean(axis=0), 1e-4, 1 - 1e-4)
+    return np.log(prior / (1 - prior))
 
 
 def _fit_temperature(logits: np.ndarray, y: np.ndarray) -> float:

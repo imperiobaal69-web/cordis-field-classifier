@@ -25,6 +25,16 @@ from sklearn.multiclass import OneVsRestClassifier
 Texts = list[str]
 
 
+class NotFittedError(RuntimeError):
+    """A model was used for prediction before ``fit`` (or before its weights were loaded)."""
+
+
+def _fitted[T](value: T | None, what: str) -> T:
+    if value is None:
+        raise NotFittedError(f"{what} is not fitted; call fit() or load a saved Classifier")
+    return value
+
+
 class Model(Protocol):
     name: str
     params: dict[str, object]
@@ -67,8 +77,7 @@ class PriorModel:
         return self
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
-        assert self.prior is not None
-        return np.tile(self.prior, (len(texts), 1))
+        return np.tile(_fitted(self.prior, "prior"), (len(texts), 1))
 
 
 class TfidfLinear:
@@ -97,8 +106,8 @@ class TfidfLinear:
         return self
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
-        assert self.clf is not None
-        return self.clf.predict_proba(self.vectorizer.transform(texts))
+        clf = _fitted(self.clf, self.name)
+        return clf.predict_proba(self.vectorizer.transform(texts))
 
 
 class Embedder:
@@ -161,8 +170,8 @@ class EmbeddingLinear:
         return self
 
     def predict_proba(self, texts: Texts) -> np.ndarray:
-        assert self.clf is not None
-        return self.clf.predict_proba(self.embedder.encode(texts))
+        clf = _fitted(self.clf, self.name)
+        return clf.predict_proba(self.embedder.encode(texts))
 
     def __getstate__(self) -> dict[str, object]:
         state = self.__dict__.copy()
