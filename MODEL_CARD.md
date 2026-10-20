@@ -58,16 +58,16 @@ selection.
 
 ## Known limitations
 
-- **Rare fields are unreliable.** F1 tracks training support; for the fine-tuned
+- Rare fields are unreliable. F1 tracks training support; for the fine-tuned
   model five fields (fewer than ~400 training projects, or catch-all "other ..."
   classes) have F1 below 0.5. See `reports/error_analysis.md`.
-- **Distribution shift.** On Horizon Europe the fine-tuned model keeps its
+- Distribution shift. On Horizon Europe the fine-tuned model keeps its
   micro-F1 (0.709) but macro-F1 drops from 0.627 to 0.608 and macro PR-AUC from
   0.665 to 0.622; it predicts 2.47 fields per project where the newer labelling
   assigns 2.13. Re-tuning thresholds on up to 4,042 labelled Horizon projects
   changes micro-F1 by at most 0.6 points (`reports/adaptation.md`). Retraining on
   the newer programme is the remedy.
-- **Field confusions follow real overlap**: computer science is the most common
+- Field confusions follow real overlap: computer science is the most common
   wrong addition (it co-occurs with almost every applied field), and biology /
   basic medicine / clinical medicine are frequently exchanged.
 - Fine-tuned models see the first 256 tokens; long objectives are truncated.

@@ -228,7 +228,7 @@ def error_analysis(model_slug: str, df: pd.DataFrame, vocab: list[str]) -> str:
 
         rng = np.random.default_rng(7)
         wrong = np.flatnonzero((pred != y).any(axis=1))
-        lines += ["### Sampled errors (seeded, not cherry-picked)", ""]
+        lines += ["### Random sample of errors (fixed seed)", ""]
         for i in rng.choice(wrong, size=min(5, len(wrong)), replace=False):
             row = part.iloc[i]
             t = [short(vocab[j]) for j in np.flatnonzero(y[i])]

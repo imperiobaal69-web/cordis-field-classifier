@@ -2,21 +2,21 @@
 
 [![CI](https://github.com/imperiobaal69-web/cordis-field-classifier/actions/workflows/ci.yml/badge.svg)](https://github.com/imperiobaal69-web/cordis-field-classifier/actions/workflows/ci.yml)
 
-Multi-label text classification of **52,000 EU-funded research projects** into
-the scientific fields they belong to, built as a production ML system rather
-than a notebook: a parser that recovers rows standard tools silently lose,
-leakage-safe splits, four models compared under one protocol, per-field
-thresholds, calibration, an evaluation on a *later* funding programme, a typed
-HTTP API, a container and CI that tests all of it.
+Classifies 52,000 EU-funded research projects into the scientific fields they
+belong to. Given a project's title and objective, it predicts its EuroSciVoc
+second-level fields (37 of them, 2.6 per project on average), for example
+*natural sciences / chemical sciences* plus *engineering and technology /
+materials engineering*.
 
-**Task.** Given a project's title and objective, predict its EuroSciVoc
-second-level fields (37 classes, 2.6 per project on average) - e.g.
-*natural sciences / chemical sciences* + *engineering and technology / materials
-engineering*.
+The data is the official CORDIS bulk export from data.europa.eu. I train and
+tune on Horizon 2020 (2014-2020) and keep Horizon Europe (2021-2027) completely
+out of training, so I can see how the models hold up on projects from a later
+programme.
 
-**Data.** Official CORDIS bulk exports (data.europa.eu): Horizon 2020
-(2014-2020) for training and model selection, **Horizon Europe (2021-2027) held
-out entirely** to measure how the model ages.
+Most of the work went into the parts around the model: a parser for the export
+(pandas silently loses rows from it), splits that don't leak duplicates, one
+evaluation protocol for four models, per-field thresholds, calibration, and an
+API, container and CI that test all of it.
 
 ## Results
 
@@ -39,30 +39,30 @@ H2020 validation only.
 
 ![Model comparison](reports/figures/leaderboard.png)
 
-What the numbers say:
+What I take from these numbers:
 
-1. **Fine-tuning is what makes the encoder useful.** The same 33M-parameter
+1. Fine-tuning is what makes the encoder useful. The same 33M-parameter
    encoder scores 0.595 frozen and 0.709 fine-tuned. Frozen general-purpose
    sentence embeddings lose to a well-regularised TF-IDF on fine-grained topic
    labels; adapting them end-to-end beats TF-IDF by 4.6 points in-distribution
    (paired 95% interval 3.9 to 5.3).
-2. **The fine-tuned model ages better.** On the later programme TF-IDF loses 2.5
+2. The fine-tuned model ages better. On the later programme TF-IDF loses 2.5
    points of micro-F1 (95% interval 1.7 to 3.4); the fine-tuned model's change is
    0.0 (-0.8 to +0.9). Its macro-F1 still drops 1.9 points (0.1 to 3.6), so rare
    fields suffer. Both still predict more fields per project (2.47)
    than the newer labelling assigns (2.13).
-3. **Thresholds are not the fix for shift.** Re-tuning per-field thresholds on up
+3. Thresholds are not the fix for shift. Re-tuning per-field thresholds on up
    to 4,042 labelled Horizon projects moves micro-F1 by at most 0.7 points for
    either model ([adaptation study](reports/adaptation.md)); the threshold-free
    ranking metric drops too (macro PR-AUC 0.665 -> 0.622). Retraining is the remedy.
-4. **Rare fields are the weak spot.** F1 rises with training support; five fields
+4. Rare fields are the weak spot. F1 rises with training support; five fields
    stay below 0.5, all with under 400 training projects or catch-all "other ..."
    labels.
-5. **Some errors are label noise.** The seeded error sample includes a drug
+5. Some errors are label noise. The seeded error sample includes a drug
    project labelled *electrical engineering* and a photonics project labelled
    *economics and business*. Most CORDIS field labels are not human-validated, so
    scores measure agreement with CORDIS's labelling, not ground truth.
-6. **Cost matters.** TF-IDF runs at 0.3 ms per document on a CPU; the fine-tuned
+6. Cost matters. TF-IDF runs at 0.3 ms per document on a CPU; the fine-tuned
    model needs 11 ms even on the M4's GPU, plus PyTorch in the image. The Docker
    image serves TF-IDF by default; the fine-tuned model is one flag away for
    accuracy-critical use.
