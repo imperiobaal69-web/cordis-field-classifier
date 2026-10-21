@@ -1,6 +1,6 @@
 # CORDIS field classifier
 
-[![CI](https://github.com/imperiobaal69-web/cordis-field-classifier/actions/workflows/ci.yml/badge.svg)](https://github.com/imperiobaal69-web/cordis-field-classifier/actions/workflows/ci.yml)
+[![CI](https://github.com/paulovillalobos/cordis-field-classifier/actions/workflows/ci.yml/badge.svg)](https://github.com/paulovillalobos/cordis-field-classifier/actions/workflows/ci.yml)
 
 Classifies 52,000 EU-funded research projects into the scientific fields they
 belong to. Given a project's title and objective, it predicts its EuroSciVoc

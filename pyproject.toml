@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Multi-label classification of EU research projects into scientific fields, with leakage-safe splits, calibrated thresholds and a temporal-shift test."
 readme = "README.md"
 license = "MIT"
-authors = [{ name = "Paulo Villalobos", email = "265691890+imperiobaal69-web@users.noreply.github.com" }]
+authors = [{ name = "Paulo Villalobos", email = "265691890+paulovillalobos@users.noreply.github.com" }]
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.0",
